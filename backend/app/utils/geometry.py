@@ -5,7 +5,6 @@ Provides safe wrappers around Shapely operations used across services.
 
 from __future__ import annotations
 
-import json
 import logging
 import math
 from datetime import date, datetime
@@ -13,9 +12,8 @@ from typing import Any
 
 import numpy as np
 from shapely import make_valid
-from shapely.geometry import mapping, shape
+from shapely.geometry import mapping
 from shapely.geometry.base import BaseGeometry
-from shapely.ops import transform
 
 logger = logging.getLogger(__name__)
 
@@ -92,12 +90,12 @@ def _sanitise_value(v: Any) -> Any:
     Handles numpy scalars, NaN/Inf floats, NaT, datetimes, dates.
     """
     # numpy scalars
-    if isinstance(v, (np.integer,)):
+    if isinstance(v, np.integer):
         return int(v)
-    if isinstance(v, (np.floating,)):
+    if isinstance(v, np.floating):
         fv = float(v)
         return None if (math.isnan(fv) or math.isinf(fv)) else fv
-    if isinstance(v, (np.bool_,)):
+    if isinstance(v, np.bool_):
         return bool(v)
     if isinstance(v, np.ndarray):
         return [_sanitise_value(x) for x in v.tolist()]
@@ -122,7 +120,7 @@ def _sanitise_value(v: Any) -> Any:
         return v.isoformat()
 
     # bytes -> base64 string
-    if isinstance(v, (bytes, bytearray)):
+    if isinstance(v, bytes | bytearray):
         import base64
 
         return base64.b64encode(v).decode("ascii")

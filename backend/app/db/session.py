@@ -37,7 +37,7 @@ engine = create_engine(
 
 # Enable WAL mode for SQLite to allow concurrent reads during writes
 @event.listens_for(engine, "connect")
-def _set_sqlite_pragma(dbapi_conn, connection_record):  # noqa: ANN001
+def _set_sqlite_pragma(dbapi_conn, connection_record) -> None:  # noqa: ANN001
     if settings.DATABASE_URL.startswith("sqlite"):
         cursor = dbapi_conn.cursor()
         cursor.execute("PRAGMA journal_mode=WAL")

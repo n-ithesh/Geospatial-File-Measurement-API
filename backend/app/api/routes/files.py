@@ -7,11 +7,10 @@ the service layer.
 
 from __future__ import annotations
 
-import json
 import logging
-from typing import Annotated, Optional
+from typing import Annotated
 
-from fastapi import APIRouter, Depends, File, Query, UploadFile, status
+from fastapi import APIRouter, Depends, File, Query, UploadFile, status, Response
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
@@ -193,7 +192,7 @@ def get_measurements(
     limit: Annotated[int, Query(ge=1, le=1000, description="Page size")] = 100,
     offset: Annotated[int, Query(ge=0, description="Page offset")] = 0,
     geometry_type: Annotated[
-        Optional[str],
+        str | None,
         Query(description="Filter by geometry type (e.g. Polygon, LineString)"),
     ] = None,
     db: Session = Depends(get_db),
@@ -237,14 +236,13 @@ def get_measurements(
 
 @router.delete(
     "/{file_id}/",
-    status_code=status.HTTP_204_NO_CONTENT,
     summary="Delete a file",
     description="Remove a file record and all associated features and stored files.",
 )
 def delete_file(
     file_id: str,
     db: Session = Depends(get_db),
-) -> None:
+):
     """Delete a file and all its features from the DB and storage."""
     db_file = db.get(UploadedFile, file_id)
     if db_file is None:
@@ -257,3 +255,4 @@ def delete_file(
     db.delete(db_file)
     db.commit()
     logger.info("Deleted file record and storage for file_id=%s", file_id)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

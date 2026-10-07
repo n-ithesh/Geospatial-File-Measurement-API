@@ -6,7 +6,6 @@ All settings can be overridden by environment variables (case-insensitive).
 from __future__ import annotations
 
 from pathlib import Path
-from typing import List
 
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -47,7 +46,7 @@ class Settings(BaseSettings):
     )
 
     # CORS
-    CORS_ORIGINS: List[str] = Field(
+    CORS_ORIGINS: list[str] = Field(
         default=["http://localhost:3000"],
         description="Allowed CORS origins.",
     )

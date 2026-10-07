@@ -11,14 +11,14 @@ import json
 import logging
 import tempfile
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import BinaryIO
 
 import geopandas as gpd
 from sqlalchemy.orm import Session
 
-from app.core.errors import InvalidFileError, UnsupportedExtensionError, FileTooLargeError
+from app.core.errors import FileTooLargeError, InvalidFileError, UnsupportedExtensionError
 from app.db.models import Feature, UploadedFile
 from app.services import measurements as measure_svc
 from app.services import storage as storage_svc
@@ -187,7 +187,7 @@ def process_upload(
         filename=storage_svc.sanitise_filename(filename),
         file_type=file_type,
         status="PROCESSING",
-        created_at=datetime.now(timezone.utc),
+        created_at=datetime.now(UTC),
     )
     db.add(db_file)
     db.commit()
@@ -256,16 +256,10 @@ def process_upload(
         )
         return db_file
 
-    except (UnsupportedExtensionError, FileTooLargeError, InvalidFileError):
+    except (UnsupportedExtensionError, FileTooLargeError, InvalidFileError) as exc:
         # Mark as FAILED in DB, then re-raise so the route handler can return 4xx
         db_file.status = "FAILED"
-        db_file.error_message = str(
-            getattr(
-                Exception.__context__,
-                "detail",
-                "Validation error during processing",
-            )
-        )
+        db_file.error_message = exc.detail
         try:
             db.commit()
         except Exception:

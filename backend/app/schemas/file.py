@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import List, Optional
 
 from pydantic import BaseModel, ConfigDict
 
@@ -15,8 +14,8 @@ class FileOut(BaseModel):
 
     id: str
     filename: str
-    feature_count: Optional[int] = None
-    crs: Optional[str] = None
+    feature_count: int | None = None
+    crs: str | None = None
     status: str
 
 
@@ -28,10 +27,10 @@ class FileDetailOut(BaseModel):
     id: str
     filename: str
     file_type: str
-    feature_count: Optional[int] = None
-    crs: Optional[str] = None
+    feature_count: int | None = None
+    crs: str | None = None
     status: str
-    error_message: Optional[str] = None
+    error_message: str | None = None
     created_at: datetime
 
 
@@ -41,4 +40,4 @@ class FileListOut(BaseModel):
     total: int
     limit: int
     offset: int
-    items: List[FileDetailOut]
+    items: list[FileDetailOut]

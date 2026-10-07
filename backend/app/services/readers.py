@@ -15,7 +15,6 @@ import logging
 import os
 import zipfile
 from pathlib import Path
-from typing import Union
 
 import geopandas as gpd
 import pyogrio
@@ -25,7 +24,7 @@ from app.core.errors import InvalidFileError
 
 logger = logging.getLogger(__name__)
 
-PathLike = Union[str, Path]
+PathLike = str | Path
 
 
 # ---------------------------------------------------------------------------
@@ -59,7 +58,7 @@ def read_kml(path: PathLike) -> gpd.GeoDataFrame:
     except Exception as exc:
         raise InvalidFileError(f"Cannot read KML file: {exc}") from exc
 
-    if not layers:
+    if len(layers) == 0:
         raise InvalidFileError("KML file contains no layers.")
 
     layer_frames: list[gpd.GeoDataFrame] = []
@@ -106,7 +105,8 @@ def _check_zip_bomb(zip_path: Path) -> None:
             total += info.file_size
             if total > limit:
                 raise InvalidFileError(
-                    f"Zip archive uncompressed size exceeds the {settings.MAX_UNCOMPRESSED_MB} MB limit."
+                    f"Zip archive uncompressed size exceeds the "
+                    f"{settings.MAX_UNCOMPRESSED_MB} MB limit."
                 )
 
 

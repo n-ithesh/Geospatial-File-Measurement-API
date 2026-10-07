@@ -6,10 +6,7 @@ and providing a safe, sanitised path for each upload.
 
 from __future__ import annotations
 
-import hashlib
 import logging
-import shutil
-import uuid
 from pathlib import Path
 from typing import BinaryIO
 

@@ -50,9 +50,11 @@ def utm_epsg(lon: float, lat: float) -> int:
 
     # Standard UTM zone calculation
     # Clamp longitude to [−180, 180) then compute zone number
-    lon_norm = ((lon + 180.0) % 360.0) - 180.0  # normalise to [−180, 180)
-    zone = int((lon_norm + 180.0) // 6) + 1
-    zone = min(zone, 60)  # guard against floating-point edge at exactly 180°
+    if lon == 180.0:
+        zone = 60
+    else:
+        lon_norm = ((lon + 180.0) % 360.0) - 180.0  # normalise to [−180, 180)
+        zone = int((lon_norm + 180.0) // 6) + 1
 
     # Northern or southern hemisphere base
     base = 32600 if lat >= 0 else 32700

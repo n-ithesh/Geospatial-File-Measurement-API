@@ -6,11 +6,9 @@ so that no binary test fixtures need to be committed to the repository.
 
 from __future__ import annotations
 
-import io
 import os
 import zipfile
 from pathlib import Path
-from typing import Generator
 
 import geopandas as gpd
 import pytest
@@ -30,8 +28,15 @@ def tmp_storage(tmp_path_factory: pytest.TempPathFactory) -> Path:
 
 @pytest.fixture(scope="session", autouse=True)
 def configure_test_settings(tmp_storage: Path) -> None:
-    """Override settings before the app is imported in tests."""
-    os.environ["DATABASE_URL"] = "sqlite://"  # in-memory SQLite
+    """Override settings before the app is imported in tests.
+
+    Sets env vars so that pydantic-settings picks them up on first import.
+    Must run before any app module is imported, so it is session-scoped
+    and autouse=True.
+    """
+    db_path = tmp_storage / "test.db"
+    os.environ.setdefault("DATABASE_URL", f"sqlite:///{db_path}")
+    os.environ["DATABASE_URL"] = f"sqlite:///{db_path}"
     os.environ["STORAGE_DIR"] = str(tmp_storage)
     os.environ["MAX_UPLOAD_MB"] = "50"
     os.environ["MAX_UNCOMPRESSED_MB"] = "200"
@@ -44,7 +49,8 @@ def client(configure_test_settings: None) -> TestClient:
     from app.main import app
 
     Base.metadata.create_all(bind=engine)
-    return TestClient(app, raise_server_exceptions=True)
+    with TestClient(app, raise_server_exceptions=True) as c:
+        yield c
 
 
 # ---------------------------------------------------------------------------

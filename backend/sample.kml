@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+<Document id="root_doc">
+<Schema name="sample" id="sample">
+    <SimpleField name="name" type="string"></SimpleField>
+</Schema>
+<Folder><name>sample</name>
+  <Placemark>
+    <name>Area 1</name>
+    <ExtendedData><SchemaData schemaUrl="#sample">
+        <SimpleData name="name">Area 1</SimpleData>
+    </SchemaData></ExtendedData>
+      <Polygon><outerBoundaryIs><LinearRing><coordinates>0.0,0.0 0.01,0.0 0.01,0.01 0.0,0.01 0.0,0.0</coordinates></LinearRing></outerBoundaryIs></Polygon>
+  </Placemark>
+</Folder>
+</Document></kml>
