@@ -162,3 +162,7 @@ cython_debug/
 # Custom for Geospatial File Measurement API
 uploads/
 *.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3

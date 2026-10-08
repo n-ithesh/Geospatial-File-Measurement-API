@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>Sample Test Data</name>
+    <Placemark>
+      <name>Sample Polygon</name>
+      <description>A simple square polygon for testing</description>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <coordinates>
+              -122.084,37.422,0
+              -122.086,37.422,0
+              -122.086,37.420,0
+              -122.084,37.420,0
+              -122.084,37.422,0
+            </coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+  </Document>
+</kml>

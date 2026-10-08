@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useMemo } from "react";
 import { MapContainer, TileLayer, GeoJSON, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
@@ -14,20 +14,43 @@ L.Icon.Default.mergeOptions({
   shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
 });
 
-function FitBounds({ features }: { features: Feature[] }) {
+function formatFeaturesAsGeoJson(features: Feature[]) {
+  return features.map(f => {
+    let geom = f.geometry;
+    if (typeof geom === "string") {
+      try {
+        geom = JSON.parse(geom);
+      } catch (e) {
+        geom = null;
+      }
+    }
+    return {
+      type: "Feature",
+      geometry: geom,
+      properties: f.properties || {},
+      // Keep original properties so they are accessible as feature.index, etc.
+      index: f.index,
+      geometry_type: f.geometry_type,
+      crs: f.crs,
+      measurement: f.measurement
+    };
+  }).filter(f => f.geometry != null);
+}
+
+function FitBounds({ validGeoJsonFeatures }: { validGeoJsonFeatures: any[] }) {
   const map = useMap();
   useEffect(() => {
-    if (features.length === 0) return;
+    if (validGeoJsonFeatures.length === 0) return;
     try {
       const geoJsonLayer = L.geoJSON({
         type: "FeatureCollection",
-        features: features,
+        features: validGeoJsonFeatures,
       } as any);
       map.fitBounds(geoJsonLayer.getBounds(), { padding: [20, 20] });
     } catch (err) {
       console.warn("Could not fit map bounds:", err);
     }
-  }, [features, map]);
+  }, [validGeoJsonFeatures, map]);
   return null;
 }
 
@@ -41,6 +64,8 @@ export default function MapView({
   onHover: (idx: number | null) => void;
 }) {
   const geoJsonRef = useRef<L.GeoJSON>(null);
+
+  const validGeoJsonFeatures = useMemo(() => formatFeaturesAsGeoJson(features), [features]);
 
   // Apply hover styles manually since react-leaflet GeoJSON doesn't update styles easily per-feature
   useEffect(() => {
@@ -59,7 +84,7 @@ export default function MapView({
   }, [hoveredIndex]);
 
   const style = (feature: any) => {
-    const isLine = feature.geometry.type.includes("LineString");
+    const isLine = feature?.geometry?.type?.includes("LineString");
     return {
       color: isLine ? "#d97706" : "#3b82f6", // amber for lines, blue for polygons
       weight: 2,
@@ -68,17 +93,17 @@ export default function MapView({
   };
 
   const onEachFeature = (feature: any, layer: L.Layer) => {
-    const f = feature as Feature;
+    const f = feature; // now contains our custom fields
     
     // Popup content
     const popupContent = `
       <div class="text-sm">
         <p class="font-bold mb-1">Feature #${f.index} (${f.geometry_type})</p>
         <div class="mb-2 max-h-32 overflow-y-auto">
-          ${Object.entries(f.properties).map(([k, v]) => `<div><span class="text-gray-500">${k}:</span> ${v}</div>`).join("")}
+          ${Object.entries(f.properties || {}).map(([k, v]) => `<div><span class="text-gray-500">${k}:</span> ${v}</div>`).join("")}
         </div>
-        ${f.measurement.value != null ? `<p class="font-semibold text-blue-700">Measurement: ${f.measurement.value.toLocaleString()} ${f.measurement.unit}</p>` : ""}
-        <p class="text-xs text-gray-500 mt-1">Status: ${f.measurement.status}</p>
+        ${f.measurement?.value != null ? `<p class="font-semibold text-blue-700">Measurement: ${f.measurement.value.toLocaleString()} ${f.measurement.unit}</p>` : ""}
+        <p class="text-xs text-gray-500 mt-1">Status: ${f.measurement?.status}</p>
       </div>
     `;
     layer.bindPopup(popupContent);
@@ -97,13 +122,15 @@ export default function MapView({
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        <GeoJSON
-          ref={geoJsonRef}
-          data={({ type: "FeatureCollection", features: features } as any)}
-          style={style}
-          onEachFeature={onEachFeature}
-        />
-        <FitBounds features={features} />
+        {validGeoJsonFeatures.length > 0 && (
+          <GeoJSON
+            ref={geoJsonRef}
+            data={{ type: "FeatureCollection", features: validGeoJsonFeatures } as any}
+            style={style}
+            onEachFeature={onEachFeature}
+          />
+        )}
+        <FitBounds validGeoJsonFeatures={validGeoJsonFeatures} />
       </MapContainer>
     </div>
   );
